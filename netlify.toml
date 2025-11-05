@@ -1,6 +1,6 @@
+# Netlify configuration for Next.js
 [build]
   command = "npm run build"
-  publish = ".next"
 
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
+# Required: Netlify will automatically install this plugin for Next.js sites
+# If not installed, manually add it in Netlify UI under "Plugins"
