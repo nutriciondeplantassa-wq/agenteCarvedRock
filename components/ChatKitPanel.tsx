@@ -44,7 +44,7 @@ const createInitialErrors = (): ErrorState => ({
 });
 
 export function ChatKitPanel({
-  theme,
+  theme: _theme,
   onWidgetAction,
   onResponseEnd,
   onThemeRequest,
@@ -264,8 +264,8 @@ export function ChatKitPanel({
   const chatkit = useChatKit({
     api: { getClientSecret },
     theme: {
-      colorScheme: theme,
-      ...getThemeConfig(theme),
+      colorScheme: "light",
+      ...getThemeConfig("light"),
     },
     startScreen: {
       greeting: GREETING,
@@ -287,7 +287,7 @@ export function ChatKitPanel({
     }) => {
       if (invocation.name === "switch_theme") {
         const requested = invocation.params.theme;
-        if (requested === "light" || requested === "dark") {
+        if (requested === "light") {
           if (isDev) {
             console.debug("[ChatKitPanel] switch_theme", requested);
           }
@@ -344,7 +344,7 @@ export function ChatKitPanel({
   }
 
   return (
-    <div className="relative pb-8 flex h-[90vh] w-full rounded-2xl flex-col overflow-hidden bg-white shadow-xl transition-colors dark:bg-slate-900">
+    <div className="relative pb-8 flex h-[90vh] w-full rounded-2xl flex-col overflow-hidden bg-white shadow-xl transition-colors">
       <ChatKit
         key={widgetInstanceKey}
         control={chatkit.control}
