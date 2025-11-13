@@ -34,7 +34,7 @@ export type ResponseUsage = {
 type ChatKitPanelProps = {
   theme: ColorScheme;
   onWidgetAction: (action: FactAction) => Promise<void>;
-  onResponseEnd: (sessionId?: string, usage?: ResponseUsage) => void;
+  onResponseEnd: (sessionId?: string, usage?: ResponseUsage, threadId?: string | null) => void;
   onThemeRequest: (scheme: ColorScheme) => void;
   onInsertPrompt?: (text: string) => Promise<void>;
 };
@@ -413,7 +413,13 @@ export function ChatKitPanel({
       if (usagePayload) {
         applyUsageToState(usagePayload);
       }
-      onResponseEnd(sessionIdRef.current ?? undefined, usagePayload);
+      onResponseEnd(
+        sessionIdRef.current ?? undefined,
+        usagePayload,
+        currentThreadIdRef.current === THREADLESS_ID
+          ? null
+          : currentThreadIdRef.current
+      );
     },
     onResponseStart: () => {
       setErrorState({ integration: null, retryable: false });
@@ -470,28 +476,56 @@ export function ChatKitPanel({
   return (
     <div className="flex h-[90vh] w-full gap-4">
       <div className="hidden w-72 shrink-0 flex-col lg:flex">
-        <div className="mb-3 flex rounded-full bg-white p-1 shadow">
+        <div className="mb-3 flex flex-row items-center gap-2 bg-white p-1 rounded-full shadow">
           <button
             type="button"
             onClick={() => setSidebarMode("prompts")}
-            className={`flex-1 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+            className={`w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 transition-colors ${
               sidebarMode === "prompts"
-                ? "bg-[#bb0a30] text-white shadow-sm"
-                : "text-gray-500 hover:text-gray-900"
+                ? "ring-2 ring-[#bb0a30] bg-gray-200"
+                : "hover:bg-gray-200"
             }`}
+            aria-label="Prompt-Manager"
           >
-            Prompt-Manager
+            {/* Book/Open Book icon for prompts */}
+            <svg
+              className={`w-5 h-5 ${sidebarMode === "prompts" ? "text-[#bb0a30]" : "text-[#bb0a30]/80"}`}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              viewBox="0 0 24 24"
+            >
+              <path
+                d="M17 19H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2zm0 0V6a2 2 0 0 1 2-2h.001A2 2 0 0 1 21 6v11a2 2 0 0 1-2 2z"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
           </button>
           <button
             type="button"
             onClick={() => setSidebarMode("tokens")}
-            className={`flex-1 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+            className={`w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 transition-colors ${
               sidebarMode === "tokens"
-                ? "bg-[#bb0a30] text-white shadow-sm"
-                : "text-gray-500 hover:text-gray-900"
+                ? "ring-2 ring-[#bb0a30] bg-gray-200"
+                : "hover:bg-gray-200"
             }`}
+            aria-label="Token-Nutzung"
           >
-            Token-Nutzung
+            {/* Pie Chart icon for token usage */}
+            <svg
+              className={`w-5 h-5 ${sidebarMode === "tokens" ? "text-[#bb0a30]" : "text-[#bb0a30]/80"}`}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              viewBox="0 0 24 24"
+            >
+              <path
+                d="M21 12A9 9 0 1 1 12 3v9z"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
           </button>
         </div>
         <div className="flex-1 overflow-hidden rounded-2xl bg-white shadow">

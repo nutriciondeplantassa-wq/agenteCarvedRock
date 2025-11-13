@@ -8,6 +8,7 @@ const prisma = new PrismaClient();
 
 interface UsageReport {
   sessionId: string;
+  threadId?: string | null;
   model: string;
   promptTokens: number;
   completionTokens: number;
@@ -24,6 +25,7 @@ export async function POST(request: NextRequest) {
     const body = (await request.json()) as UsageReport;
     const {
       sessionId,
+      threadId,
       model,
       promptTokens,
       completionTokens,
@@ -39,6 +41,7 @@ export async function POST(request: NextRequest) {
     }
 
     const cost = calculateCost(model, promptTokens, completionTokens);
+    const threadKey = threadId ?? "default";
 
     // Ensure session exists
     await prisma.usageSession.upsert({
@@ -51,10 +54,48 @@ export async function POST(request: NextRequest) {
       update: {},
     });
 
+    const usageThread = await prisma.usageThread.upsert({
+      where: {
+        sessionId_threadKey: {
+          sessionId,
+          threadKey,
+        },
+      },
+      update: {},
+      create: {
+        sessionId,
+        threadKey,
+      },
+    });
+
+    await prisma.usageThreadModel.upsert({
+      where: {
+        usageThreadId_model: {
+          usageThreadId: usageThread.id,
+          model,
+        },
+      },
+      create: {
+        usageThreadId: usageThread.id,
+        model,
+        tokensInput: promptTokens,
+        tokensOutput: completionTokens,
+        tokensTotal: totalTokens,
+        cost,
+      },
+      update: {
+        tokensInput: { increment: promptTokens },
+        tokensOutput: { increment: completionTokens },
+        tokensTotal: { increment: totalTokens },
+        cost: { increment: cost },
+      },
+    });
+
     // Log the usage
     const log = await prisma.usageLog.create({
       data: {
         sessionId,
+        threadId: threadId ?? null,
         model,
         tokensInput: promptTokens,
         tokensOutput: completionTokens,

@@ -29,9 +29,9 @@ export default function App() {
   }, []);
 
   const handleResponseEnd = useCallback(
-    async (sessionId?: string, usage?: ResponseUsage) => {
+    async (sessionId?: string, usage?: ResponseUsage, threadId?: string | null) => {
       if (process.env.NODE_ENV !== "production") {
-        console.debug("[ChatKitPanel] response end", sessionId, usage);
+        console.debug("[ChatKitPanel] response end", sessionId, usage, threadId);
       }
       if (!sessionId || !usage) return;
       try {
@@ -40,6 +40,7 @@ export default function App() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             sessionId,
+            threadId,
             model: usage.model,
             promptTokens: usage.promptTokens,
             completionTokens: usage.completionTokens,

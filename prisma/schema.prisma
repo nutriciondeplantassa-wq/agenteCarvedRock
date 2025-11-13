@@ -23,6 +23,7 @@ model UsageSession {
   updatedAt  DateTime @updatedAt
 
   logs       UsageLog[]
+  threads    UsageThread[]
 
   @@index([userId])
   @@index([startTime])
@@ -33,6 +34,7 @@ model UsageLog {
   sessionId     String
   session       UsageSession @relation(fields: [sessionId], references: [sessionId])
 
+  threadId      String?
   model         String
   tokensInput   Int
   tokensOutput  Int
@@ -43,6 +45,7 @@ model UsageLog {
   createdAt     DateTime @default(now())
 
   @@index([sessionId])
+  @@index([threadId])
   @@index([timestamp])
   @@index([model])
 }
@@ -63,4 +66,35 @@ model DailyAggregate {
   updatedAt     DateTime @updatedAt
 
   @@index([date])
+}
+
+model UsageThread {
+  id        String   @id @default(cuid())
+  sessionId String
+  threadKey String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  session UsageSession @relation(fields: [sessionId], references: [sessionId])
+  models  UsageThreadModel[]
+
+  @@unique([sessionId, threadKey])
+  @@index([sessionId])
+}
+
+model UsageThreadModel {
+  id            String   @id @default(cuid())
+  usageThreadId String
+  model         String
+  tokensInput   Int      @default(0)
+  tokensOutput  Int      @default(0)
+  tokensTotal   Int      @default(0)
+  cost          Float    @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  usageThread UsageThread @relation(fields: [usageThreadId], references: [id])
+
+  @@unique([usageThreadId, model])
+  @@index([model])
 }
